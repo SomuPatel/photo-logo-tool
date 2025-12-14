@@ -45,6 +45,7 @@ button{
   color:#fff;
   border:none;
   border-radius:10px;
+  margin-top:5px;
 }
 </style>
 </head>
@@ -99,6 +100,12 @@ button{
 
   <label>Border Color 2 (Gradient)</label>
   <input type="color" id="borderColor2" value="#0000ff">
+</div>
+
+<!-- PRESET CONTROLS -->
+<div class="control">
+  <button onclick="savePreset()">Save Preset</button>
+  <button onclick="loadPreset()">Load Last Preset</button>
 </div>
 
 <canvas id="canvas"></canvas>
@@ -177,6 +184,44 @@ function draw(){
 document.querySelectorAll("input,select").forEach(i=>{
   i.oninput = draw;
 });
+
+/* PRESET SAVE / LOAD */
+function savePreset(){
+  const preset = {
+    logoOpacity: logoOpacity.value,
+    logoWidth: logoWidth.value,
+    logoHeight: logoHeight.value,
+    logoX: logoX.value,
+    logoY: logoY.value,
+    borderType: borderType.value,
+    borderThickness: borderThickness.value,
+    borderColor1: borderColor1.value,
+    borderColor2: borderColor2.value
+  };
+  localStorage.setItem("photoLogoPreset", JSON.stringify(preset));
+  alert("Preset saved ✅");
+}
+
+function loadPreset(){
+  const data = localStorage.getItem("photoLogoPreset");
+  if(!data){
+    alert("No preset found");
+    return;
+  }
+  const p = JSON.parse(data);
+
+  logoOpacity.value = p.logoOpacity;
+  logoWidth.value = p.logoWidth;
+  logoHeight.value = p.logoHeight;
+  logoX.value = p.logoX;
+  logoY.value = p.logoY;
+  borderType.value = p.borderType;
+  borderThickness.value = p.borderThickness;
+  borderColor1.value = p.borderColor1;
+  borderColor2.value = p.borderColor2;
+
+  draw();
+}
 
 /* DOWNLOAD */
 function downloadImage(){
