@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Photo Logo Tool</title>
+
+<style>
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:#f2f2f2;
+}
+header{
+  background:#111;
+  color:#fff;
+  padding:12px;
+  text-align:center;
+  font-size:18px;
+}
+main{
+  padding:10px;
+}
+.control{
+  background:#fff;
+  padding:10px;
+  margin-bottom:10px;
+  border-radius:10px;
+}
+label{
+  font-size:14px;
+}
+input,select{
+  width:100%;
+}
+canvas{
+  width:100%;
+  border-radius:10px;
+}
+button{
+  width:100%;
+  padding:12px;
+  font-size:16px;
+  background:#111;
+  color:#fff;
+  border:none;
+  border-radius:10px;
+}
+</style>
+</head>
+
+<body>
+
+<header>Photo Logo & Border Tool</header>
+
+<main>
+
+<!-- IMAGE -->
+<div class="control">
+  <label>Upload Photo</label>
+  <input type="file" id="photo" accept="image/*">
+</div>
+
+<!-- LOGO -->
+<div class="control">
+  <label>Upload Logo (PNG)</label>
+  <input type="file" id="logo" accept="image/png">
+
+  <label>Logo Opacity</label>
+  <input type="range" id="logoOpacity" min="0" max="1" step="0.05" value="0.8">
+
+  <label>Logo Width (%)</label>
+  <input type="range" id="logoWidth" min="5" max="60" value="20">
+
+  <label>Logo Height (%)</label>
+  <input type="range" id="logoHeight" min="5" max="60" value="20">
+
+  <label>Logo Position X</label>
+  <input type="range" id="logoX" min="0" max="100" value="70">
+
+  <label>Logo Position Y</label>
+  <input type="range" id="logoY" min="0" max="100" value="5">
+</div>
+
+<!-- BORDER -->
+<div class="control">
+  <label>Border Type</label>
+  <select id="borderType">
+    <option value="none">None</option>
+    <option value="color">Color</option>
+    <option value="gradient">Gradient</option>
+  </select>
+
+  <label>Border Thickness</label>
+  <input type="range" id="borderThickness" min="1" max="40" value="10">
+
+  <label>Border Color 1</label>
+  <input type="color" id="borderColor1" value="#ff0000">
+
+  <label>Border Color 2 (Gradient)</label>
+  <input type="color" id="borderColor2" value="#0000ff">
+</div>
+
+<canvas id="canvas"></canvas>
+
+<div class="control">
+  <button onclick="downloadImage()">Download Image</button>
+</div>
+
+</main>
+
+<script>
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+let baseImg = new Image();
+let logoImg = new Image();
+
+/* IMAGE */
+photo.onchange = e=>{
+  baseImg.onload = draw;
+  baseImg.src = URL.createObjectURL(e.target.files[0]);
+};
+
+/* LOGO */
+logo.onchange = e=>{
+  logoImg.onload = draw;
+  logoImg.src = URL.createObjectURL(e.target.files[0]);
+};
+
+function draw(){
+  if(!baseImg.src) return;
+
+  canvas.width = baseImg.width;
+  canvas.height = baseImg.height;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  // BASE IMAGE
+  ctx.drawImage(baseImg,0,0,canvas.width,canvas.height);
+
+  // LOGO
+  if(logoImg.src){
+    let w = canvas.width * (logoWidth.value/100);
+    let h = canvas.height * (logoHeight.value/100);
+    let x = (canvas.width - w) * (logoX.value/100);
+    let y = (canvas.height - h) * (logoY.value/100);
+
+    ctx.globalAlpha = logoOpacity.value;
+    ctx.drawImage(logoImg,x,y,w,h);
+    ctx.globalAlpha = 1;
+  }
+
+  // BORDER (INSIDE)
+  if(borderType.value !== "none"){
+    let t = parseInt(borderThickness.value);
+
+    if(borderType.value === "color"){
+      ctx.strokeStyle = borderColor1.value;
+    }else{
+      let g = ctx.createLinearGradient(0,0,canvas.width,canvas.height);
+      g.addColorStop(0,borderColor1.value);
+      g.addColorStop(1,borderColor2.value);
+      ctx.strokeStyle = g;
+    }
+
+    ctx.lineWidth = t;
+    ctx.strokeRect(
+      t/2,
+      t/2,
+      canvas.width - t,
+      canvas.height - t
+    );
+  }
+}
+
+/* LIVE UPDATE */
+document.querySelectorAll("input,select").forEach(i=>{
+  i.oninput = draw;
+});
+
+/* DOWNLOAD */
+function downloadImage(){
+  canvas.toBlob(blob=>{
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "final-image.png";
+    a.click();
+  });
+}
+</script>
+
+</body>
+</html>
